@@ -36,7 +36,11 @@ class Delta{
     }
     
     public function in($conn,$text){
-        $a=$conn->query("Insert into form (formcol,countview) values ('$text',0)");
+        $conn->query("Insert into form (formcol,countview) values ('$text',0)");
+    }
+    
+    public function ind($conn,$text,$id){
+        $conn->query("Insert into video (id,place) values ($id,'$text')");
     }
     
     public function del($conn,$id){
@@ -166,40 +170,60 @@ if(isset($_POST["button2"])){
         ?>
     </body>
 </html>
-<html>
+<html lang="en">
 <head>
-    <title>Загрузка видео</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>download ur file</title>
 </head>
 <body>
+    <h2>download ur video</h2>
     <form action="index.php" method="post" enctype="multipart/form-data">
-        <label for="video">Выберите видео:</label>
-        <input type="file" name="video" id="video">
+        <label for="file">Chooose ur file:</label>
+        <input type="file" name="file" id="file" required>
+        <br>
         <input type="submit" value="Загрузить">
     </form>
 </body>
-</html>
 <?php
+ini_set('upload_max_filesize', '40M');
+ini_set('post_max_size', '63M');
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $uploadDir = "C:\Users\0010101000111\Documents";  // Папка для загрузки видео
-    $uploadFile = $uploadDir .basename($_FILES["video"]["name"]);
-
-    if (move_uploaded_file($_FILES["video"]["tmp_name"], $uploadFile)) {
-        echo "Видео успешно загружено.";
+    $uploadDir = "C:/xampp/htdocs/PhpProject1/";
+    $uploadFile = $uploadDir . basename($_FILES["file"]["name"]);
+    
+    $id=$delta->que($conn,"select max(id) from video","max(id)");
+    $id++;
+    echo $id.$uploadFile;
+    $delta->ind($conn, $uploadFile, $id);
+    if (move_uploaded_file($_FILES["file"]["tmp_name"], $uploadFile)) {
+        echo "Ok: " . $uploadDir;
     } else {
-        echo "Ошибка при загрузке видео.";
+        echo "Errr, be sure that ur file does not exceed 40mb.";
     }
 }
-
 ?>
-<html>
+</html>
+<html lang="en">
 <head>
-    <title>Проигрывание видео</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video</title>
 </head>
 <body>
-    <h2>Загруженное видео:</h2>
+    <h2>Video player, but be sure, that u are give permissions to reading files</h2>
+
     <video width="640" height="360" controls>
-        <source src="uploads/ваше_загруженное_видео.mp4" type="video/mp4">
-        Ваш браузер не поддерживает тег video.
+        <?php
+            $a=$delta->que($conn,"select max(id) from video","max(id)");
+            $c="video/mp4";
+            for($i=1;$i<=$a-1;$i++){
+                $b=$delta->que($conn,"select place from video where id = $i", "place");
+                echo "<source src=$b type=$c>";
+            }
+            
+        ?>
+        
     </video>
 </body>
 </html>
